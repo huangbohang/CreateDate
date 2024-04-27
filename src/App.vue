@@ -29,4 +29,17 @@ code {
   color: #d63384;
   word-wrap: break-word;
 }
+/* 在屏幕宽度小于等于500px时应用以下样式 */
+@media (max-width: 500px) {
+  .arco-picker-range-wrapper {
+    flex-direction: column;
+  }
+}
+
+/* 在屏幕宽度大于500px时应用以下样式 */
+@media (min-width: 501px) {
+  .arco-picker-range-wrapper {
+    flex-direction: row;
+  }
+}
 </style>

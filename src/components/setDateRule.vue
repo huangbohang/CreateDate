@@ -1,39 +1,226 @@
 
 <template>
-  <div>
+  <a-spin :loading="bit_loading" class="grid-one grid-gap-5">
     <a-typography-text
       >按规律生成日期👉
       <a-typography-text type="primary" @click="helpVoid">
         查看教程
       </a-typography-text>
     </a-typography-text>
-    <div class="row-between-center m-b-10">
-      <a-typography-text>添加生成规律</a-typography-text>
-      <a-button type="primary">新增</a-button>
+    <a-divider>设置日期规律</a-divider>
+    <addRulePop @add="addRule" ref="editPop"></addRulePop>
+    <a-table
+      @change="sortChange"
+      :columns="columns"
+      :data="dataArr"
+      :pagination="false"
+      :draggable="{ type: 'handle', width:0 }"
+    >
+      <template #delete="{  rowIndex }">
+        <icon-minus-circle size="20" style="color: #999" @click="deleteVoid(rowIndex)"/>
+      </template>
+      <template #edit="{ record, rowIndex }">
+        <icon-edit
+          size="20"
+          style="color: #999"
+          @click="selectRowVoid(record, rowIndex)"
+        />
+      </template>
+    </a-table>
+    <a-divider>映射多维表格</a-divider>
+    <SelectTableView
+      title="选择表"
+      canAdd
+      v-model="export_table_id"
+      :allFieldDic="{ dy_user_table_id }"
+      :preSetArr="['抖音视频表']"
+    ></SelectTableView>
+    <SelectFieldView
+      title="开始日期"
+      canAdd
+      :typeNumArr="[5]"
+      v-model="export_filed_dic.start_date_filed"
+      :allFieldDic="export_filed_dic"
+    ></SelectFieldView>
+    <SelectFieldView
+      v-if="isDateRange"
+      title="结束日期"
+      canAdd
+      :typeNumArr="[5]"
+      v-model="export_filed_dic.end_date_filed"
+      :allFieldDic="export_filed_dic"
+    ></SelectFieldView>
+    <SelectFieldView
+      title="周几"
+      v-if="isMustWeek"
+      canAdd
+      :typeNumArr="[1]"
+      v-model="export_filed_dic.week_filed"
+      :allFieldDic="export_filed_dic"
+    ></SelectFieldView>
+    <div class="row-between-center m-t-10">
+      <a-typography-text class="font-bold"
+        >共有数据:{{ totalNum }}</a-typography-text
+      >
+      <a-button type="primary" @click="importData()">导入</a-button>
     </div>
-    <a-table :columns="columns"></a-table>
-
-    <addRulePop></addRulePop>
-  </div>
+  </a-spin>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import addRulePop from "./addRulePop.vue";
+import SelectTableView from "./superView/selectTable.vue";
+import SelectFieldView from "./superView/SelectField.vue";
+import {
+  bit_loading,
+  export_table_id,
+  addBitRecord,
+  export_filed_dic,
+  bit_table,
+  getTableAllFieldFromId,
+} from "./js/superBase";
 import dayjs from "dayjs";
-const columns=ref([ {
-        title: '规律',
-        dataIndex: 'rule',
-      },{
-        title: '时间',
-        dataIndex: 'time',
-      },{
-        title: '条数',
-        dataIndex: 'num',
-      }])
+import { Message } from "@arco-design/web-vue";
+const dataArr = ref([]);
+function addRule(item) {
+  dataArr.value.push(item);
+  console.log('dddddfdfdf',dataArr.value)
+}
+const isMustWeek = computed(() => {
+  const findWeekInx = dataArr.value.findIndex(
+    (a) => a["configDic"]["selectRuleType"] == "week"
+  );
+  debugger
+  return findWeekInx >= 0;
+});
+const isDateRange = computed(() => {
+  const findDateRangeInx = dataArr.value.findIndex(
+    (a) => a["configDic"]["is_time_range"]
+  );
+  return findDateRangeInx >= 0;
+});
+const totalNum = computed(() => {
+  let num = 0;
+  for (let item of dataArr.value) {
+    num = num + item.resultArr.length;
+  }
+  return num;
+});
+async function importData() {
+  if (dataArr.value.length == 0) {
+    return Message.info("请设置时间规律");
+  }
+  if (!export_table_id.value) {
+    return Message.info("选择映射的表");
+  }
+  if (!export_filed_dic.value.start_date_filed) {
+    return Message.info("选择开始日期");
+  }
+  if (!export_filed_dic.value.end_date_filed && isDateRange.value) {
+    return Message.info("选择结束日期");
+  }
+  if (!export_filed_dic.value.week_filed && isMustWeek.value) {
+    return Message.info("选择周几");
+  }
 
+  let arr = [];
+  for (let ruleItem of dataArr.value) {
+    for (let item of ruleItem.resultArr) {
+      let fields = {};
 
+      fields[export_filed_dic.value["start_date_filed"]] = dayjs(
+        item.times[0]
+      ).valueOf();
+      if (ruleItem.configDic.is_time_range) {
+        fields[export_filed_dic.value["end_date_filed"]] = dayjs(
+          item.times[1]
+        ).valueOf();
+      }
+      fields[export_filed_dic.value["week_filed"]] = item.week;
+      arr.push({ fields });
+    }
+  }
+  await addBitRecord(arr, export_table_id.value);
+  localStorage.setItem('SSDATECONFIG',dataArr.value)
+  Message.success('导入成功')
 
+  // const dd = await getTableAllFieldFromId(export_table_id.value);
+  // const view = await bit_table.getActiveView();
+  // const recordIdList = await view.getVisibleRecordIdList();
+  // console.log("recordIdList", recordIdList);
+}
+// 选中的行
+const editPop = ref();
+function selectRowVoid(record, rowIndex) {
+  editPop.value.showPopVoid(true, {
+    configDic: record.configDic,
+    success: (newItem) => {
+      dataArr.value[rowIndex] = newItem;
+      console.log("成功", newItem);
+    },
+  });
+}
+function sortChange(data){
+  dataArr.value=data
+}
+// 删除
+function deleteVoid(inx){
+  dataArr.value.splice(inx,1)
+
+}
+
+const columns = ref([
+  {
+    title: "删除",
+    dataIndex: "delete",
+    slotName: "delete",
+    width: "60",
+  },
+  {
+    title: "规律",
+    dataIndex: "table.ruleName",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "日期范围",
+    dataIndex: "table.dateRange",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "时间",
+    dataIndex: "table.times",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "条数",
+    dataIndex: "table.maxNum",
+    ellipsis: true,
+    tooltip: true,
+    render: ({ record }) => {
+      if (record.configDic.createType == "input_maxNum") {
+        return record.table.maxNum;
+      } else {
+        return record.resultArr.length;
+      }
+    },
+  },
+  {
+    title: "编辑",
+    dataIndex: "edit",
+    slotName: "edit",
+    width: "60",
+  },
+]);
+function helpVoid(){
+  window.open(
+    'https://y35xdslz6g.feishu.cn/docx/Yx0Sd6IRboXYroxG7fic5beDnid?from=from_copylink',
+    "_blank"
+  );
+}
 </script>
 
 <style>
