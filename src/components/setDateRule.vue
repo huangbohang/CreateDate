@@ -14,10 +14,14 @@
       :columns="columns"
       :data="dataArr"
       :pagination="false"
-      :draggable="{ type: 'handle', width:0 }"
+      :draggable="{ type: 'handle', width: 0 }"
     >
-      <template #delete="{  rowIndex }">
-        <icon-minus-circle size="20" style="color: #999" @click="deleteVoid(rowIndex)"/>
+      <template #delete="{ rowIndex }">
+        <icon-minus-circle
+          size="20"
+          style="color: #999"
+          @click="deleteVoid(rowIndex)"
+        />
       </template>
       <template #edit="{ record, rowIndex }">
         <icon-edit
@@ -27,6 +31,37 @@
         />
       </template>
     </a-table>
+    <div class="grid-one border grid-gap-1">
+      <div class="row-start-center p-all-5 bg-color">
+        <a-typography-text>统一设置</a-typography-text>
+        <a-switch class="m-lr-10" v-model="ty_config.is_ty"></a-switch>
+        <a-typography-text
+          class="flex-grow"
+          :ellipsis="{ rows: 1, showTooltip: true }"
+          >开启后,以上规律天数默认为1,日期范围失效,第一个规则以统一开始日期为准,第二个规则开始时间为第一个规则满足条件后第二天开始,依次类推</a-typography-text
+        >
+      </div>
+      <div class="row-start-center p-all-5" v-if="ty_config.is_ty">
+        <a-typography-text class="flex-shrink">总条数</a-typography-text>
+        <a-input-number
+          class="flex-shrink m-lr-5"
+          style="flex: 2"
+          :min="1"
+          v-model="ty_config.totalNum"
+          placeholder="总条数"
+        ></a-input-number>
+
+        <a-typography-text class="flex-shrink">开始时间</a-typography-text>
+        <a-date-picker
+          class="flex-shrink m-lr-5"
+          style="flex: 2"
+          placeholder="开始日期"
+          v-model="ty_config.startDate"
+        ></a-date-picker>
+        <!-- <a-button type="primary" status="success">确定</a-button> -->
+      </div>
+    </div>
+
     <a-divider>映射多维表格</a-divider>
     <SelectTableView
       title="选择表"
@@ -60,10 +95,26 @@
     ></SelectFieldView>
     <div class="row-between-center m-t-10">
       <a-typography-text class="font-bold"
-        >共有数据:{{ totalNum }}</a-typography-text
+        >共有数据:{{ ty_config.is_ty?ty_config.totalNum:totalNum }}</a-typography-text
       >
-      <a-button type="primary" @click="importData()">导入</a-button>
+      <a-space>
+        <a-button type="dashed" status="success" @click="importData(true)"
+          >预览</a-button
+        >
+        <a-button type="primary" @click="importData()">导入</a-button>
+      </a-space>
     </div>
+    <!-- 预览 -->
+    <a-modal
+    :hide-cancel="true"
+      :visible="showPrewTable"
+      title="日期预览"
+      @close="hidePrewTable"
+      @cancel="hidePrewTable"
+      @ok="hidePrewTable"
+    >
+      <a-table :columns="preColumns" :data="prewArr"></a-table>
+    </a-modal>
   </a-spin>
 </template>
 
@@ -82,16 +133,23 @@ import {
 } from "./js/superBase";
 import dayjs from "dayjs";
 import { Message } from "@arco-design/web-vue";
+import { cloneDeep } from "lodash";
+const is_tyConfig = ref(false);
+const showPrewTable = ref(false);
+const ty_config = ref({
+  is_ty: false,
+  totalNum: 1,
+  startDate: "",
+});
 const dataArr = ref([]);
+const prewArr = ref([]);
 function addRule(item) {
   dataArr.value.push(item);
-  console.log('dddddfdfdf',dataArr.value)
 }
 const isMustWeek = computed(() => {
   const findWeekInx = dataArr.value.findIndex(
     (a) => a["configDic"]["selectRuleType"] == "week"
   );
-  debugger
   return findWeekInx >= 0;
 });
 const isDateRange = computed(() => {
@@ -107,13 +165,43 @@ const totalNum = computed(() => {
   }
   return num;
 });
-async function importData() {
+function hidePrewTable() {
+  showPrewTable.value = false;
+}
+
+async function importData(isPrew) {
   if (dataArr.value.length == 0) {
     return Message.info("请设置时间规律");
+  }
+  if (ty_config.value.is_ty) {
+    if (ty_config.value.totalNum < 1) {
+      return Message.info("请输入条数");
+    }
+    if (!ty_config.value.startDate) {
+      return Message.info("请选择开始日期");
+    }
+  }
+
+  let arr = [];
+  const configArr = dataArr.value.map((a) => a["configDic"]);
+
+  if (ty_config.value.is_ty) {
+    prewArr.value = editPop.value.ty_create_from_week(
+      configArr,
+      ty_config.value
+    );
+  } else {
+    prewArr.value = editPop.value.create_from_week(configArr);
+  }
+  if (isPrew) {
+    showPrewTable.value = true;
+
+    return;
   }
   if (!export_table_id.value) {
     return Message.info("选择映射的表");
   }
+
   if (!export_filed_dic.value.start_date_filed) {
     return Message.info("选择开始日期");
   }
@@ -124,26 +212,24 @@ async function importData() {
     return Message.info("选择周几");
   }
 
-  let arr = [];
-  for (let ruleItem of dataArr.value) {
-    for (let item of ruleItem.resultArr) {
-      let fields = {};
+  for (let item of prewArr.value) {
+    let fields = {};
 
-      fields[export_filed_dic.value["start_date_filed"]] = dayjs(
-        item.times[0]
+    fields[export_filed_dic.value["start_date_filed"]] = dayjs(
+      item.times[0]
+    ).valueOf();
+    if (item.times.length == 2) {
+      fields[export_filed_dic.value["end_date_filed"]] = dayjs(
+        item.times[1]
       ).valueOf();
-      if (ruleItem.configDic.is_time_range) {
-        fields[export_filed_dic.value["end_date_filed"]] = dayjs(
-          item.times[1]
-        ).valueOf();
-      }
-      fields[export_filed_dic.value["week_filed"]] = item.week;
-      arr.push({ fields });
     }
+    fields[export_filed_dic.value["week_filed"]] = item.week;
+    arr.push({ fields });
   }
+
   await addBitRecord(arr, export_table_id.value);
-  localStorage.setItem('SSDATECONFIG',dataArr.value)
-  Message.success('导入成功')
+  localStorage.setItem("SSDATECONFIG", dataArr.value);
+  Message.success("导入成功");
 
   // const dd = await getTableAllFieldFromId(export_table_id.value);
   // const view = await bit_table.getActiveView();
@@ -154,20 +240,19 @@ async function importData() {
 const editPop = ref();
 function selectRowVoid(record, rowIndex) {
   editPop.value.showPopVoid(true, {
-    configDic: record.configDic,
+    configDic: cloneDeep(record.configDic),
     success: (newItem) => {
       dataArr.value[rowIndex] = newItem;
       console.log("成功", newItem);
     },
   });
 }
-function sortChange(data){
-  dataArr.value=data
+function sortChange(data) {
+  dataArr.value = data;
 }
 // 删除
-function deleteVoid(inx){
-  dataArr.value.splice(inx,1)
-
+function deleteVoid(inx) {
+  dataArr.value.splice(inx, 1);
 }
 
 const columns = ref([
@@ -188,6 +273,12 @@ const columns = ref([
     dataIndex: "table.dateRange",
     ellipsis: true,
     tooltip: true,
+    render: ({ record }) => {
+      if (ty_config.value.is_ty) {
+        return "";
+      }
+      return record["table"]["dateRange"];
+    },
   },
   {
     title: "时间",
@@ -201,6 +292,9 @@ const columns = ref([
     ellipsis: true,
     tooltip: true,
     render: ({ record }) => {
+      if (ty_config.value.is_ty) {
+        return 1;
+      }
       if (record.configDic.createType == "input_maxNum") {
         return record.table.maxNum;
       } else {
@@ -215,12 +309,36 @@ const columns = ref([
     width: "60",
   },
 ]);
-function helpVoid(){
+
+function helpVoid() {
   window.open(
-    'https://y35xdslz6g.feishu.cn/docx/Yx0Sd6IRboXYroxG7fic5beDnid?from=from_copylink',
+    "https://y35xdslz6g.feishu.cn/docx/Yx0Sd6IRboXYroxG7fic5beDnid?from=from_copylink",
     "_blank"
   );
 }
+const preColumns = ref([
+  {
+    title: "开始时间",
+    dataIndex: "times",
+    align: "center",
+    render: ({ record }) => record["times"][0],
+  },
+  {
+    title: "结束时间",
+    dataIndex: "table.ruleName",
+    render: ({ record }) =>
+      record["times"].length > 1 ? record["times"][1] : "",
+    ellipsis: true,
+    align: "center",
+
+    tooltip: true,
+  },
+  {
+    title: "星期",
+    align: "center",
+    dataIndex: "week",
+  },
+]);
 </script>
 
 <style>
@@ -228,5 +346,8 @@ function helpVoid(){
   width: 70px;
   text-align: center;
   flex-shrink: 0;
+}
+.arco-typography {
+  margin-bottom: 0px !important;
 }
 </style>

@@ -2,11 +2,14 @@
 <template>
   <div>
     <div class="row-between-center m-b-10">
-      <a-typography-text class="font-bold" style="font-size: 16px">设置规律</a-typography-text>
+      <a-typography-text class="font-bold" style="font-size: 16px"
+        >设置规律</a-typography-text
+      >
       <a-button type="primary" @click="showPopVoid(true)">新增规律</a-button>
     </div>
+
     <a-modal
-    title="设置日期规律"
+      title="设置日期规律"
       :visible="showPop"
       width="400px"
       @before-ok="commitVoid"
@@ -143,14 +146,16 @@ const optionsWeek = ref([
   { label: "周六", value: 6 },
   { label: "周日", value: 0 },
 ]);
-defineExpose({ showPopVoid });
-let editItemDic={configDic:"",success:()=>{}}
+defineExpose({ showPopVoid, ty_create_from_week, create_from_week });
+let editItemDic = { configDic: "", success: () => {} };
 const showPop = ref(false);
 function showPopVoid(show, back) {
   showPop.value = show;
   if (back) {
     editItemDic = back;
-    configDic.value=back.configDic
+    configDic.value = back.configDic;
+  } else {
+    editItemDic = "";
   }
 }
 const emit = defineEmits(["add"]);
@@ -213,52 +218,64 @@ function commitVoid(done) {
     .filter((a) => configDic.value.input_selectWeek.includes(a["value"]))
     .map((a) => a["label"]);
   const resultDic = {
-    resultArr: create_from_week(configDic.value),
+    resultArr: create_from_week([configDic.value]),
     table: dic,
     configDic: cloneDeep(configDic.value),
   };
   if (editItemDic.configDic) {
-    editItemDic.success(resultDic)
+    editItemDic.success(resultDic);
   } else {
     emit("add", resultDic);
   }
 
   done(true);
-  showPopVoid(false)
+  showPopVoid(false);
 }
 
 function sureVoid() {
   create_from_week(configDic.value);
 }
-function create_from_week(dic) {
-  const startDate =
-    dic.createType == "input_maxNum"
-      ? dic.input_start_date
-      : dic.input_dateRange[0];
-  const endDate =
-    dic.createType == "input_maxNum" ? "" : dic.input_dateRange[1];
-  // 限制条数
+function create_from_week(configArr) {
   let arr = [];
-  let startTime = new Date(startDate).getTime();
-  const endTime = new Date(endDate).getTime();
-  // 循环条件
-  function loopCondition(num) {
-    if (dic.createType == "input_maxNum") {
-      return arr.length < dic.input_maxNum;
-    }
-    if (dic.createType == "input_dateRange") {
-      const curTime = dayjs(startDate).add(num, "d").valueOf();
-      return curTime <= endTime;
-    }
-  }
-  let num = 0;
-  while (loopCondition(num)) {
-    const dicc = { times: [], week: "" };
-    const curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
-    const weekNum = dayjs(curDate).day();
 
-    if (dic.selectRuleType == "week") {
-      if (dic.input_selectWeek.includes(weekNum)) {
+  for (let dic of configArr) {
+    const startDate =
+      dic.createType == "input_maxNum"
+        ? dic.input_start_date
+        : dic.input_dateRange[0];
+    const endDate =
+      dic.createType == "input_maxNum" ? "" : dic.input_dateRange[1];
+    // 限制条数
+    let startTime = new Date(startDate).getTime();
+    const endTime = new Date(endDate).getTime();
+    // 循环条件
+    function loopCondition(num) {
+      if (dic.createType == "input_maxNum") {
+        return arr.length < dic.input_maxNum;
+      }
+      if (dic.createType == "input_dateRange") {
+        const curTime = dayjs(startDate).add(num, "d").valueOf();
+        return curTime <= endTime;
+      }
+    }
+    let num = 0;
+    while (loopCondition(num)) {
+      const dicc = { times: [], week: "" };
+      const curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
+      const weekNum = dayjs(curDate).day();
+      if (dic.selectRuleType == "week") {
+        if (dic.input_selectWeek.includes(weekNum)) {
+          if (dic.is_time_range) {
+            dicc.times.push(curDate + " " + dic.input_time_range[0]);
+            dicc.times.push(curDate + " " + dic.input_time_range[1]);
+          } else {
+            dicc.times.push(curDate + " " + dic.input_time);
+          }
+          const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
+          dicc.week = weekItem.label;
+          arr.push(dicc);
+        }
+      } else {
         if (dic.is_time_range) {
           dicc.times.push(curDate + " " + dic.input_time_range[0]);
           dicc.times.push(curDate + " " + dic.input_time_range[1]);
@@ -269,21 +286,69 @@ function create_from_week(dic) {
         dicc.week = weekItem.label;
         arr.push(dicc);
       }
-    } else {
-      if (dic.is_time_range) {
-        dicc.times.push(curDate + " " + dic.input_time_range[0]);
-        dicc.times.push(curDate + " " + dic.input_time_range[1]);
-      } else {
-        dicc.times.push(curDate + " " + dic.input_time);
-      }
-      const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
-      dicc.week = weekItem.label;
-      arr.push(dicc);
+      num = num + (dic.selectRuleType == "week" ? 1 : dic.input_spaceDayNum);
     }
-    num = num + (dic.selectRuleType == "week" ? 1 : dic.input_spaceDayNum);
-    console.log("ddd", num);
   }
-  console.log("dddddd", arr);
+  return arr;
+}
+
+// 统一创建
+function ty_create_from_week(configArr, ty_config) {
+  // 限制条数
+  let arr = [];
+  const startDate = ty_config.startDate;
+
+  // 循环条件
+  function loopCondition(num) {
+    return arr.length < ty_config.totalNum;
+  }
+  let num = 0;
+  let curDate = "";
+  let weekNum = "";
+  while (loopCondition(num)) {
+    debugger;
+    for (let dic of configArr) {
+      const dicc = { times: [], week: "" };
+      // 如果是周  则循环 直到找齐所有的周 [周一,周二,周三]知道找齐所有的周一 周二 周三
+      if (dic.selectRuleType == "week") {
+        let i = 0;
+        while (i < dic.input_selectWeek.length) {
+          curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
+          weekNum = dayjs(curDate).day();
+          num++;
+          if (dic.input_selectWeek.includes(weekNum)) {
+            if (dic.is_time_range) {
+              dicc.times.push(curDate + " " + dic.input_time_range[0]);
+              dicc.times.push(curDate + " " + dic.input_time_range[1]);
+            } else {
+              dicc.times.push(curDate + " " + dic.input_time);
+            }
+            const weekItem = optionsWeek.value.find(
+              (a) => a["value"] == weekNum
+            );
+            dicc.week = weekItem.label;
+            i++;
+            arr.push(dicc);
+            break;
+          }
+        }
+      } else {
+        curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
+        weekNum = dayjs(curDate).day();
+        // 如果是日规律 则循环一次
+        if (dic.is_time_range) {
+          dicc.times.push(curDate + " " + dic.input_time_range[0]);
+          dicc.times.push(curDate + " " + dic.input_time_range[1]);
+        } else {
+          dicc.times.push(curDate + " " + dic.input_time);
+        }
+        const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
+        dicc.week = weekItem.label;
+        arr.push(dicc);
+        num = num + dic.input_spaceDayNum;
+      }
+    }
+  }
 
   return arr;
 }
