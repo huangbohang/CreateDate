@@ -135,6 +135,7 @@ const configDic = ref({
   input_maxNum: 10, //最大条数
   input_start_date: "", //日期
   input_dateRange: [], //日期范围
+  id: 0,
 });
 
 const optionsWeek = ref([
@@ -156,6 +157,7 @@ function showPopVoid(show, back) {
     configDic.value = back.configDic;
   } else {
     editItemDic = "";
+    configDic.value.id = new Date().getTime();
   }
 }
 const emit = defineEmits(["add"]);
@@ -248,10 +250,11 @@ function create_from_week(configArr) {
     // 限制条数
     let startTime = new Date(startDate).getTime();
     const endTime = new Date(endDate).getTime();
+    let createNum = 0;
     // 循环条件
     function loopCondition(num) {
       if (dic.createType == "input_maxNum") {
-        return arr.length < dic.input_maxNum;
+        return createNum < dic.input_maxNum;
       }
       if (dic.createType == "input_dateRange") {
         const curTime = dayjs(startDate).add(num, "d").valueOf();
@@ -273,6 +276,7 @@ function create_from_week(configArr) {
           }
           const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
           dicc.week = weekItem.label;
+          createNum++;
           arr.push(dicc);
         }
       } else {
@@ -284,6 +288,7 @@ function create_from_week(configArr) {
         }
         const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
         dicc.week = weekItem.label;
+        createNum++;
         arr.push(dicc);
       }
       num = num + (dic.selectRuleType == "week" ? 1 : dic.input_spaceDayNum);
@@ -300,15 +305,24 @@ function ty_create_from_week(configArr, ty_config) {
 
   // 循环条件
   function loopCondition(num) {
+    debugger;
     return arr.length < ty_config.totalNum;
   }
   let num = 0;
   let curDate = "";
   let weekNum = "";
+  let all_input_selectWeek = [];
+  if (ty_config.model == 2) {
+    for (let item of configArr) {
+      if (item.selectRuleType == "week") {
+        all_input_selectWeek.push(item);
+      }
+    }
+  } else {
+  }
+
   while (loopCondition(num)) {
-    debugger;
     for (let dic of configArr) {
-      const dicc = { times: [], week: "" };
       // 如果是周  则循环 直到找齐所有的周 [周一,周二,周三]知道找齐所有的周一 周二 周三
       if (dic.selectRuleType == "week") {
         let i = 0;
@@ -316,25 +330,38 @@ function ty_create_from_week(configArr, ty_config) {
           curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
           weekNum = dayjs(curDate).day();
           num++;
-          if (dic.input_selectWeek.includes(weekNum)) {
+          if (ty_config.model == 1) {
+            all_input_selectWeek = [dic];
+          }
+          // 找到对应的周
+          const findItem = all_input_selectWeek.find((a) =>
+            a.input_selectWeek.includes(weekNum)
+          );
+          if (findItem) {
+            const dicc = { times: [], week: "" };
             if (dic.is_time_range) {
-              dicc.times.push(curDate + " " + dic.input_time_range[0]);
-              dicc.times.push(curDate + " " + dic.input_time_range[1]);
+              dicc.times.push(curDate + " " + findItem.input_time_range[0]);
+              dicc.times.push(curDate + " " + findItem.input_time_range[1]);
             } else {
-              dicc.times.push(curDate + " " + dic.input_time);
+              dicc.times.push(curDate + " " + findItem.input_time);
             }
             const weekItem = optionsWeek.value.find(
               (a) => a["value"] == weekNum
             );
             dicc.week = weekItem.label;
             i++;
-            arr.push(dicc);
-            break;
+            if (loopCondition()) {
+              arr.push(dicc);
+            }
           }
         }
+        // 找到已经处理过的
+        const findIndex = all_input_selectWeek.find((a) => a.id == dic.id);
+        all_input_selectWeek.splice(findIndex, 1);
       } else {
         curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
         weekNum = dayjs(curDate).day();
+        const dicc = { times: [], week: "" };
         // 如果是日规律 则循环一次
         if (dic.is_time_range) {
           dicc.times.push(curDate + " " + dic.input_time_range[0]);
@@ -344,9 +371,12 @@ function ty_create_from_week(configArr, ty_config) {
         }
         const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
         dicc.week = weekItem.label;
-        arr.push(dicc);
+        if (loopCondition()) {
+          arr.push(dicc);
+        }
         num = num + dic.input_spaceDayNum;
       }
+      //
     }
   }
 

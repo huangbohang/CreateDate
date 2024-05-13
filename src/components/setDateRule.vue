@@ -58,6 +58,19 @@
           placeholder="开始日期"
           v-model="ty_config.startDate"
         ></a-date-picker>
+        <a-typography-text class="flex-shrink m-r-5"
+          >执行模式</a-typography-text
+        >
+        <a-select
+          v-model="ty_config.model"
+          style="width: 120px"
+          placeholder="选择执行模式"
+          :options="[
+            { label: '强顺序', value: 1 },
+            { label: '弱顺序', value: 2 },
+          ]"
+        >
+        </a-select>
         <!-- <a-button type="primary" status="success">确定</a-button> -->
       </div>
     </div>
@@ -95,7 +108,9 @@
     ></SelectFieldView>
     <div class="row-between-center m-t-10">
       <a-typography-text class="font-bold"
-        >共有数据:{{ ty_config.is_ty?ty_config.totalNum:totalNum }}</a-typography-text
+        >共有数据:{{
+          ty_config.is_ty ? ty_config.totalNum : totalNum
+        }}</a-typography-text
       >
       <a-space>
         <a-button type="dashed" status="success" @click="importData(true)"
@@ -106,7 +121,7 @@
     </div>
     <!-- 预览 -->
     <a-modal
-    :hide-cancel="true"
+      :hide-cancel="true"
       :visible="showPrewTable"
       title="日期预览"
       @close="hidePrewTable"
@@ -139,6 +154,7 @@ const showPrewTable = ref(false);
 const ty_config = ref({
   is_ty: false,
   totalNum: 1,
+  model: 2, //1强顺序 2弱顺序
   startDate: "",
 });
 const dataArr = ref([]);
@@ -195,7 +211,6 @@ async function importData(isPrew) {
   }
   if (isPrew) {
     showPrewTable.value = true;
-
     return;
   }
   if (!export_table_id.value) {
