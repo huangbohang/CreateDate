@@ -14,6 +14,8 @@
       :columns="columns"
       :data="dataArr"
       :pagination="false"
+      style="width: 99%;"
+     :scroll="{x:'120%'}"
       :draggable="{ type: 'handle', width: 0 }"
     >
       <template #delete="{ rowIndex }">
@@ -51,7 +53,7 @@
           placeholder="总条数"
         ></a-input-number>
 
-        <a-typography-text class="flex-shrink">开始时间</a-typography-text>
+        <a-typography-text class="flex-shrink">开始日期</a-typography-text>
         <a-date-picker
           class="flex-shrink m-lr-5"
           style="flex: 2"
@@ -275,19 +277,23 @@ const columns = ref([
     title: "删除",
     dataIndex: "delete",
     slotName: "delete",
-    width: "60",
+    width: 60,
   },
   {
     title: "规律",
     dataIndex: "table.ruleName",
     ellipsis: true,
     tooltip: true,
+    width: 60,
+
   },
   {
     title: "日期范围",
     dataIndex: "table.dateRange",
     ellipsis: true,
     tooltip: true,
+    width: 120,
+
     render: ({ record }) => {
       if (ty_config.value.is_ty) {
         return "";
@@ -304,6 +310,7 @@ const columns = ref([
   {
     title: "条数",
     dataIndex: "table.maxNum",
+    width: 60,
     ellipsis: true,
     tooltip: true,
     render: ({ record }) => {
