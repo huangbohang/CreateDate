@@ -2,41 +2,49 @@
 <template>
   <div>
     <div class="row-between-center m-b-10">
-      <a-typography-text class="font-bold" style="font-size: 16px"
-        >设置规律</a-typography-text
-      >
-      <a-button type="primary" @click="showPopVoid(true)">新增规律</a-button>
+      <a-typography-text class="font-bold" style="font-size: 16px">{{
+        t("设置规律")
+      }}</a-typography-text>
+      <a-button type="primary" @click="showPopVoid(true)">{{
+        t("新增规律")
+      }}</a-button>
     </div>
 
     <a-modal
-      title="设置日期规律"
+      :title="t('设置日期规律')"
       :visible="showPop"
-      width="400px"
+      width="380px"
       @before-ok="commitVoid"
       @cancel="showPopVoid(false)"
       @close="showPopVoid(false)"
     >
       <div class="grid-one m-t-10">
         <div class="row-start-center">
-          <a-typography-text class="labelClass">选择规律</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("选择规律")
+          }}</a-typography-text>
           <a-radio-group v-model="configDic.selectRuleType">
-            <a-radio value="week">周规律</a-radio>
-            <a-radio value="day">日规律</a-radio>
+            <a-radio value="week">{{ t("周规律") }}</a-radio>
+            <a-radio value="day">{{ t("日规律") }}</a-radio>
           </a-radio-group>
         </div>
         <!-- 按照周的规则 -->
         <div v-if="configDic.selectRuleType == 'week'" class="row-start-center">
-          <a-typography-text class="labelClass">选择周</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("选择周")
+          }}</a-typography-text>
           <a-select
             :options="optionsWeek"
             multiple
             v-model="configDic.input_selectWeek"
-            placeholder="选择周几"
+            :placeholder="t('选择周几')"
           ></a-select>
         </div>
         <!-- 日期按照相隔 -->
         <div v-if="configDic.selectRuleType == 'day'" class="row-start-center">
-          <a-typography-text class="labelClass">间隔天数</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("间隔天数")
+          }}</a-typography-text>
           <a-input-number
             mode="button"
             size="large"
@@ -45,14 +53,18 @@
           ></a-input-number>
         </div>
         <div class="row-start-center">
-          <a-typography-text class="labelClass">时间点</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("时间点")
+          }}</a-typography-text>
           <a-radio-group v-model="configDic.is_time_range">
-            <a-radio :value="false">时间点</a-radio>
-            <a-radio :value="true">时间段</a-radio>
+            <a-radio :value="false">{{ t("时间点") }}</a-radio>
+            <a-radio :value="true">{{ t("时间段") }}</a-radio>
           </a-radio-group>
         </div>
         <div class="row-start-center">
-          <a-typography-text class="labelClass">时间</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("时间")
+          }}</a-typography-text>
           <a-time-picker
             v-if="configDic.is_time_range"
             type="time-range"
@@ -68,10 +80,12 @@
           />
         </div>
         <div class="row-start-center">
-          <a-typography-text class="labelClass">限制方式</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("限制方式")
+          }}</a-typography-text>
           <a-radio-group v-model="configDic.createType">
-            <a-radio value="input_maxNum">条数限制</a-radio>
-            <a-radio value="input_dateRange">日期范围</a-radio>
+            <a-radio value="input_maxNum">{{ t("条数限制") }}</a-radio>
+            <a-radio value="input_dateRange">{{ t("日期范围") }}</a-radio>
           </a-radio-group>
         </div>
         <!-- 生成条数 -->
@@ -79,7 +93,9 @@
           v-if="configDic.createType == 'input_maxNum'"
           class="row-start-center"
         >
-          <a-typography-text class="labelClass">天数</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("天数")
+          }}</a-typography-text>
           <a-input-number
             mode="button"
             size="large"
@@ -91,7 +107,9 @@
           v-if="configDic.createType == 'input_maxNum'"
           class="row-start-center"
         >
-          <a-typography-text class="labelClass">开始日期</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("开始日期")
+          }}</a-typography-text>
           <a-date-picker
             v-model="configDic.input_start_date"
             class="flex-grow"
@@ -102,26 +120,29 @@
           v-if="configDic.createType == 'input_dateRange'"
           class="row-start-center"
         >
-          <a-typography-text class="labelClass">日期范围</a-typography-text>
+          <a-typography-text class="labelClass">{{
+            t("日期范围")
+          }}</a-typography-text>
           <a-range-picker
             v-model="configDic.input_dateRange"
             class="flex-grow"
           />
         </div>
-        <!-- <a-button @click="sureVoid">确定</a-button> -->
+        <!-- <a-button @click="sureVoid">{{t('确定')}}</a-button> -->
       </div>
     </a-modal>
   </div>
 </template>
 <script setup>
 import { cloneDeep } from "lodash";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { Message } from "@arco-design/web-vue";
 import dayjs from "dayjs";
 import weekday from "dayjs/plugin/weekday";
 import "dayjs/locale";
 dayjs.locale("zh-cn");
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 // var weekday = require('dayjs/plugin/weekday')
 dayjs.extend(weekday);
 const configDic = ref({
@@ -137,16 +158,23 @@ const configDic = ref({
   input_dateRange: [], //日期范围
   id: 0,
 });
+const optionsWeek = ref([]);
+onMounted(()=>{
+  optionsWeek.value=[
+  { label: t("周一"), value: 1 },
+  { label: t("周二"), value: 2 },
+  { label: t("周三"), value: 3 },
+  { label: t("周四"), value: 4 },
+  { label: t("周五"), value: 5 },
+  { label: t("周六"), value: 6 },
+  { label: t("周日"), value: 0 },
+]
+})
 
-const optionsWeek = ref([
-  { label: "周一", value: 1 },
-  { label: "周二", value: 2 },
-  { label: "周三", value: 3 },
-  { label: "周四", value: 4 },
-  { label: "周五", value: 5 },
-  { label: "周六", value: 6 },
-  { label: "周日", value: 0 },
-]);
+
+
+
+
 defineExpose({ showPopVoid, ty_create_from_week, create_from_week });
 let editItemDic = { configDic: "", success: () => {} };
 const showPop = ref(false);
@@ -171,14 +199,14 @@ function commitVoid(done) {
   if (configDic.value.selectRuleType == "week") {
     if (configDic.value.input_selectWeek.length == 0) {
       done(false);
-      return Message.info("请选择周");
+      return Message.info(t("请选择周"));
     }
     const weeks = optionsWeek.value
       .filter((a) => configDic.value.input_selectWeek.includes(a["value"]))
       .map((a) => a["label"]);
     dic.ruleName = weeks.join(",");
   } else {
-    dic.ruleName = "间隔" + configDic.value.input_maxNum + "天";
+    dic.ruleName = t("间隔") + configDic.value.input_maxNum + t("天");
   }
 
   if (configDic.value.is_time_range) {
@@ -186,12 +214,12 @@ function commitVoid(done) {
       dic.times = configDic.value.input_time_range.join("~");
     } else {
       done(false);
-      return Message.info("请选择时间");
+      return Message.info(t("请选择时间"));
     }
   } else {
     if (!configDic.value.input_time) {
       done(false);
-      return Message.info("请选择时间");
+      return Message.info(t("请选择时间"));
     } else {
       dic.times = [configDic.value.input_time];
     }
@@ -201,7 +229,7 @@ function commitVoid(done) {
     dic.maxNum = configDic.value.input_maxNum;
     if (!configDic.value.input_start_date) {
       done(false);
-      return Message.info("请选择开始日期");
+      return Message.info(t("请选择开始日期"));
     } else {
       dic.dateRange = configDic.value.input_start_date;
     }
@@ -211,7 +239,7 @@ function commitVoid(done) {
       dic.dateRange = [configDic.value.input_dateRange].join("~");
     } else {
       done(false);
-      return Message.info("请选择日期范围");
+      return Message.info(t("请选择日期范围"));
     }
   }
   // 生成描述
@@ -305,7 +333,6 @@ function ty_create_from_week(configArr, ty_config) {
 
   // 循环条件
   function loopCondition(num) {
-    debugger;
     return arr.length < ty_config.totalNum;
   }
   let num = 0;
@@ -334,6 +361,7 @@ function ty_create_from_week(configArr, ty_config) {
             all_input_selectWeek = [dic];
           }
           // 找到对应的周
+
           const findItem = all_input_selectWeek.find((a) =>
             a.input_selectWeek.includes(weekNum)
           );
@@ -351,13 +379,22 @@ function ty_create_from_week(configArr, ty_config) {
             dicc.week = weekItem.label;
             i++;
             if (loopCondition()) {
+              findItem["sort"] = num;
+              // 排序解决同样周的问题
+              all_input_selectWeek = all_input_selectWeek.sort((a, b) => {
+                if (a - b > 0) {
+                  return 1;
+                } else {
+                  return -1;
+                }
+              });
               arr.push(dicc);
             }
           }
         }
         // 找到已经处理过的
-        const findIndex = all_input_selectWeek.find((a) => a.id == dic.id);
-        all_input_selectWeek.splice(findIndex, 1);
+        // const findIndex = all_input_selectWeek.find((a) => a.id == dic.id);
+        // all_input_selectWeek.splice(findIndex, 1);
       } else {
         curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
         weekNum = dayjs(curDate).day();
