@@ -32,6 +32,7 @@ async function initBaeData() {
   bit_loading.value = true;
   bit_table = await bitable.base.getActiveTable();
   bit_select_dic.value.tableId = bit_table.id;
+  export_table_id.value=bit_table.id;
   getAllField(true);
 }
 async function getAllField(loadCache = false) {

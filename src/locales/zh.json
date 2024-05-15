@@ -1,5 +1,5 @@
 {
-  "按规律生成日期": "按规律生成日期",
+  "按规律生成日期": "批量生成日期插件可根据设置的日期规则批量生成日期（时间点、时间段），用于排班、排课",
   "查看教程": "查看教程",
   "设置日期规律": "设置日期规律",
   "统一设置": "统一设置",
@@ -59,7 +59,7 @@
   "天": "天",
   "请选择时间": "请选择时间",
   "请选择日期范围": "请选择日期范围",
-  "help_url": "https://y35xdslz6g.feishu.cn/docx/EhI1dCS2boR6nQxmu8fcXiBbnZf?from=from_copylink",
+  "help_url": "https://y35xdslz6g.feishu.cn/docx/Yx0Sd6IRboXYroxG7fic5beDnid?from=from_copylink",
   "look_hepler": "查看教程",
   "please_input": "选择",
   "must": "需要",

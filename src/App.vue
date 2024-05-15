@@ -45,7 +45,7 @@ code {
   word-wrap: break-word;
 }
 /* 在屏幕宽度小于等于500px时应用以下样式 */
-@media (max-width: 405px) {
+@media (max-width: 460px) {
   .arco-picker-range-wrapper {
     flex-direction: column;
   }
@@ -55,13 +55,17 @@ code {
   .arco-auto-tooltip-content {
     font-size: 10px;
   }
+  .arco-table-td-content{
+    font-size: 10px;
+
+  }
   .arco-table-cell {
-    padding: 9px 5px !important;
+    padding: 9px 2px !important;
   }
 }
 
 /* 在屏幕宽度大于500px时应用以下样式 */
-@media (min-width: 410px) {
+@media (min-width: 460px) {
   .arco-picker-range-wrapper {
     flex-direction: row;
   }
@@ -71,8 +75,12 @@ code {
   .arco-auto-tooltip-content {
     font-size: 14px;
   }
+  .arco-table-td-content{
+    font-size: 14px;
+
+  }
   .arco-table-cell {
-    padding: 9px 16px;
+    padding: 9px 5px;
   }
 }
 </style>

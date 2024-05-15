@@ -133,10 +133,10 @@
       :title="t('日期预览')"
       @close="hidePrewTable"
       @cancel="hidePrewTable"
-      width="380px"
+      width="80%"
       @ok="hidePrewTable"
     >
-      <a-table :columns="preColumns" :data="prewArr" :scroll="{y:700}"></a-table>
+      <a-table :columns="preColumns" :data="prewArr" :scroll="{y:600}"></a-table>
     </a-modal>
   </a-spin>
 </template>
@@ -287,6 +287,8 @@ onMounted(() => {
       title: t("开始时间"),
       dataIndex: "times",
       align: "center",
+      ellipsis: true,
+      tooltip: true,
       render: ({ record }) => record["times"][0],
     },
     {
@@ -302,6 +304,7 @@ onMounted(() => {
       title: t("星期"),
       align: "center",
       dataIndex: "week",
+      render: ({ record }) =>record['week']
     },
   ];
   columns.value = [
