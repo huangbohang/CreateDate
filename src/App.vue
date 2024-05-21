@@ -83,4 +83,8 @@ code {
     padding: 9px 5px;
   }
 }
+body {
+  background: #fff;
+}
+
 </style>
