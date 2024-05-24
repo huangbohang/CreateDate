@@ -17,6 +17,8 @@
   "查看教程": "View Tutorial",
   "设置日期规律": "Set Date Patterns",
   "统一设置": "Unified Settings",
+  "周合并":"Weekly merger",
+  "周合并说明":"When there are multiple patterns with the same week, choose to merge the weeks. For all subsequent weeks with the same week, the first matching date shall prevail",
   "guizeshuoming": "When enabled, the default for the above pattern days is 1, and the date range is invalid. The first rule is based on the unified start date. The start time of the second rule is the day after the first rule meets the conditions, and so on.",
   "总条数": "Total Items",
   "开始日期": "Start Date",

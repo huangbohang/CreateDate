@@ -2,9 +2,19 @@
 <template>
   <div>
     <div class="row-between-center m-b-10">
-      <a-typography-text class="font-bold" style="font-size: 16px">{{
-        t("设置规律")
-      }}</a-typography-text>
+      <a-typography-text
+        class="font-bold flex-shrink"
+        style="font-size: 16px"
+        >{{ t("设置规律") }}</a-typography-text
+      >
+      <!-- <a-select :options="[{ label: 'ddd', value: 1 }]">
+        <template #option="{ data }">
+          <div class="row-start-center">
+            <a-input v-model="data.label"></a-input>
+            <icon-edit />
+          </div>
+        </template>
+      </a-select> -->
       <a-button type="primary" @click="showPopVoid(true)">{{
         t("新增规律")
       }}</a-button>
@@ -159,21 +169,17 @@ const configDic = ref({
   id: 0,
 });
 const optionsWeek = ref([]);
-onMounted(()=>{
-  optionsWeek.value=[
-  { label: t("周一"), value: 1 },
-  { label: t("周二"), value: 2 },
-  { label: t("周三"), value: 3 },
-  { label: t("周四"), value: 4 },
-  { label: t("周五"), value: 5 },
-  { label: t("周六"), value: 6 },
-  { label: t("周日"), value: 0 },
-]
-})
-
-
-
-
+onMounted(() => {
+  optionsWeek.value = [
+    { label: t("周一"), value: 1 },
+    { label: t("周二"), value: 2 },
+    { label: t("周三"), value: 3 },
+    { label: t("周四"), value: 4 },
+    { label: t("周五"), value: 5 },
+    { label: t("周六"), value: 6 },
+    { label: t("周日"), value: 0 },
+  ];
+});
 
 defineExpose({ showPopVoid, ty_create_from_week, create_from_week });
 let editItemDic = { configDic: "", success: () => {} };
@@ -265,8 +271,9 @@ function commitVoid(done) {
 function sureVoid() {
   create_from_week(configDic.value);
 }
-function create_from_week(configArr) {
+function create_from_week(configArr,ty_config={week_merge:false}) {
   let arr = [];
+  let week_merge_date = {};
 
   for (let dic of configArr) {
     const startDate =
@@ -292,10 +299,19 @@ function create_from_week(configArr) {
     let num = 0;
     while (loopCondition(num)) {
       const dicc = { times: [], week: "" };
-      const curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
+      let curDate = dayjs(startDate).add(num, "d").format("YYYY-MM-DD");
       const weekNum = dayjs(curDate).day();
       if (dic.selectRuleType == "week") {
         if (dic.input_selectWeek.includes(weekNum)) {
+          // 周合并开启后,相同周以第一个符合的为准
+          if (ty_config.week_merge) {
+            if (week_merge_date[weekNum]) {
+              curDate = week_merge_date[weekNum];
+            } else {
+              week_merge_date[weekNum] = curDate;
+            }
+          }
+
           if (dic.is_time_range) {
             dicc.times.push(curDate + " " + dic.input_time_range[0]);
             dicc.times.push(curDate + " " + dic.input_time_range[1]);
@@ -329,6 +345,7 @@ function create_from_week(configArr) {
 function ty_create_from_week(configArr, ty_config) {
   // 限制条数
   let arr = [];
+  let week_merge_date={}
   const startDate = ty_config.startDate;
 
   // 循环条件
@@ -366,6 +383,15 @@ function ty_create_from_week(configArr, ty_config) {
             a.input_selectWeek.includes(weekNum)
           );
           if (findItem) {
+
+             // 周合并开启后,相同周以第一个符合的为准
+          if (ty_config.week_merge) {
+            if (week_merge_date[weekNum]) {
+              curDate = week_merge_date[weekNum];
+            } else {
+              week_merge_date[weekNum] = curDate;
+            }
+          }
             const dicc = { times: [], week: "" };
             if (dic.is_time_range) {
               dicc.times.push(curDate + " " + findItem.input_time_range[0]);

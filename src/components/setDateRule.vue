@@ -34,6 +34,15 @@
     </a-table>
     <div class="grid-one border grid-gap-1">
       <div class="row-start-center p-all-5 bg-color">
+        <a-typography-text>{{ t('周合并') }}</a-typography-text>
+        <a-switch class="m-lr-10" v-model="ty_config.week_merge"></a-switch>
+        <a-typography-text
+          class="flex-grow"
+          :ellipsis="{ rows: 1, showTooltip: true }"
+          >{{ t("周合并说明") }}</a-typography-text
+        >
+      </div>
+      <div class="row-start-center p-all-5 bg-color">
         <a-typography-text>{{ t("统一设置") }}</a-typography-text>
         <a-switch class="m-lr-10" v-model="ty_config.is_ty"></a-switch>
         <a-typography-text
@@ -166,6 +175,7 @@ const ty_config = ref({
   totalNum: 1,
   model: 2, //1强顺序 2弱顺序
   startDate: "",
+  week_merge:false//周合并
 });
 const dataArr = ref([]);
 const prewArr = ref([]);
@@ -217,7 +227,7 @@ async function importData(isPrew) {
       ty_config.value
     );
   } else {
-    prewArr.value = editPop.value.create_from_week(configArr);
+    prewArr.value = editPop.value.create_from_week(configArr,ty_config.value);
   }
   if (isPrew) {
     showPrewTable.value = true;
