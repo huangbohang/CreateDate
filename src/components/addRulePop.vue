@@ -271,7 +271,7 @@ function commitVoid(done) {
 function sureVoid() {
   create_from_week(configDic.value);
 }
-function create_from_week(configArr,ty_config={week_merge:false}) {
+function create_from_week(configArr, ty_config = { week_merge: false }) {
   let arr = [];
   let week_merge_date = {};
 
@@ -345,7 +345,7 @@ function create_from_week(configArr,ty_config={week_merge:false}) {
 function ty_create_from_week(configArr, ty_config) {
   // 限制条数
   let arr = [];
-  let week_merge_date={}
+  let week_merge_date = {};
   const startDate = ty_config.startDate;
 
   // 循环条件
@@ -364,8 +364,8 @@ function ty_create_from_week(configArr, ty_config) {
     }
   } else {
   }
-
-  while (loopCondition(num)) {
+  while (loopCondition()) {
+    week_merge_date = {};
     for (let dic of configArr) {
       // 如果是周  则循环 直到找齐所有的周 [周一,周二,周三]知道找齐所有的周一 周二 周三
       if (dic.selectRuleType == "week") {
@@ -382,17 +382,42 @@ function ty_create_from_week(configArr, ty_config) {
           const findItem = all_input_selectWeek.find((a) =>
             a.input_selectWeek.includes(weekNum)
           );
+          let lastDic = "";
           if (findItem) {
-
-             // 周合并开启后,相同周以第一个符合的为准
-          if (ty_config.week_merge) {
-            if (week_merge_date[weekNum]) {
-              curDate = week_merge_date[weekNum];
-            } else {
-              week_merge_date[weekNum] = curDate;
+            // 最后一个
+            if (arr.length > 0) {
+              lastDic = arr[arr.length - 1];
+              const downWeekNum =
+                parseInt(lastDic.week.value) + 1 == 7
+                  ? 0
+                  : parseInt(lastDic.week.value) + 1;
+              if (downWeekNum == weekNum) {
+                curDate = dayjs(lastDic["times"][0])
+                  .add(1, "d")
+                  .format("YYYY-MM-DD");
+                week_merge_date = {};
+                // if (ty_config.model == 1) {
+                num = lastDic.num;
+                // }
+              }
             }
-          }
-            const dicc = { times: [], week: "" };
+            // 周合并开启后,相同周以第一个符合的为准
+            if (ty_config.week_merge) {
+              if (week_merge_date[weekNum]) {
+                if (ty_config.model == 1) {
+                  const lastWeekNum = lastDic.week.value;
+                  if (lastWeekNum == weekNum) {
+                    curDate = week_merge_date[weekNum]["date"];
+                    num = lastDic.num;
+                  }
+                } else {
+                  curDate = week_merge_date[weekNum]["date"];
+                }
+              } else {
+                week_merge_date[weekNum] = { date: curDate, weekNum: weekNum };
+              }
+            }
+            const dicc = { times: [], week: "", num: num };
             if (dic.is_time_range) {
               dicc.times.push(curDate + " " + findItem.input_time_range[0]);
               dicc.times.push(curDate + " " + findItem.input_time_range[1]);
@@ -402,7 +427,7 @@ function ty_create_from_week(configArr, ty_config) {
             const weekItem = optionsWeek.value.find(
               (a) => a["value"] == weekNum
             );
-            dicc.week = weekItem.label;
+            dicc.week = weekItem;
             i++;
             if (loopCondition()) {
               findItem["sort"] = num;

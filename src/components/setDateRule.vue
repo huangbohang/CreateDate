@@ -258,7 +258,7 @@ async function importData(isPrew) {
         item.times[1]
       ).valueOf();
     }
-    fields[export_filed_dic.value["week_filed"]] = item.week;
+    fields[export_filed_dic.value["week_filed"]] = item.week.label
     arr.push({ fields });
   }
 
@@ -313,8 +313,8 @@ onMounted(() => {
     {
       title: t("星期"),
       align: "center",
-      dataIndex: "week",
-      render: ({ record }) =>record['week']
+      dataIndex: "week.label"
+      // render: ({ record }) =>record['week']
     },
   ];
   columns.value = [
