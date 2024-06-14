@@ -319,7 +319,7 @@ function create_from_week(configArr, ty_config = { week_merge: false }) {
             dicc.times.push(curDate + " " + dic.input_time);
           }
           const weekItem = optionsWeek.value.find((a) => a["value"] == weekNum);
-          dicc.week = weekItem.label;
+          dicc.week = weekItem;
           createNum++;
           arr.push(dicc);
         }
