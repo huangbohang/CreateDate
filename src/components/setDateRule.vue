@@ -34,12 +34,12 @@
     </a-table>
     <div class="grid-one border grid-gap-1">
       <div class="row-start-center p-all-5 bg-color">
-        <a-typography-text>{{ t('周合并') }}</a-typography-text>
+        <a-typography-text>{{ t('相邻周合并') }}</a-typography-text>
         <a-switch class="m-lr-10" v-model="ty_config.week_merge"></a-switch>
         <a-typography-text
           class="flex-grow"
           :ellipsis="{ rows: 1, showTooltip: true }"
-          >{{ t("周合并说明") }}</a-typography-text
+          >{{ t("相邻周合并说明") }}</a-typography-text
         >
       </div>
       <div class="row-start-center p-all-5 bg-color">
@@ -258,7 +258,7 @@ async function importData(isPrew) {
         item.times[1]
       ).valueOf();
     }
-    fields[export_filed_dic.value["week_filed"]] = item.week;
+    fields[export_filed_dic.value["week_filed"]] = item.week.label
     arr.push({ fields });
   }
 
@@ -313,8 +313,8 @@ onMounted(() => {
     {
       title: t("星期"),
       align: "center",
-      dataIndex: "week",
-      render: ({ record }) =>record['week']
+      dataIndex: "week.label"
+      // render: ({ record }) =>record['week']
     },
   ];
   columns.value = [

@@ -8,6 +8,7 @@
 </template>
 <script setup>
 import setDateRule from "./components/setDateRule.vue";
+// import testView from "./components/test.vue";
 import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
 import enUS from "@arco-design/web-vue/es/locale/lang/en-us";
 import { ref } from "vue";
@@ -55,9 +56,8 @@ code {
   .arco-auto-tooltip-content {
     font-size: 10px;
   }
-  .arco-table-td-content{
+  .arco-table-td-content {
     font-size: 10px;
-
   }
   .arco-table-cell {
     padding: 9px 2px !important;
@@ -75,9 +75,8 @@ code {
   .arco-auto-tooltip-content {
     font-size: 14px;
   }
-  .arco-table-td-content{
+  .arco-table-td-content {
     font-size: 14px;
-
   }
   .arco-table-cell {
     padding: 9px 5px;
