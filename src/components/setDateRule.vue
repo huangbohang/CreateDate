@@ -269,7 +269,6 @@ async function importData(isPrew) {
 
   // const dd = await getTableAllFieldFromId(export_table_id.value);
   // const view = await bit_table.getActiveView();
-  // const recordIdList = await view.getVisibleRecordIdList();
   // console.log("recordIdList", recordIdList);
 }
 // 选中的行

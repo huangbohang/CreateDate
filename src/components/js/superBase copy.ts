@@ -186,7 +186,20 @@ async function getDyUserList() {
   // const fieldMetaList = await table.getFieldMetaList();
   const viewList = await table.getViewList();
   const view = viewList[0];
-  const recordIdList = await view.getVisibleRecordIdList();
+  let recordIdList:string[] = []
+  let hasMorePage = false
+  let nextPageToken: number | undefined = undefined
+  do {
+    const { hasMore, pageToken, recordIds } = await view.getVisibleRecordIdListByPage({
+        pageToken: nextPageToken,
+        pageSize: 200
+    })
+    nextPageToken = pageToken
+    hasMorePage = hasMore
+    recordIdList = recordIdList.concat(recordIds)
+} while (hasMorePage)
+  
+
   let arr = [];
   for (const recordId of recordIdList) {
     let dic = {};
